@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function initSiteGate() {
   const html = document.documentElement;
   const overlay = document.getElementById('opening-overlay');
-  const enterBtn = document.getElementById('opening-enter-btn');
   const heroContent = document.querySelector('.hero-content');
   const musicBtn = document.getElementById('music-btn');
   if (!overlay) return;
@@ -66,10 +65,11 @@ function initSiteGate() {
 
   function enterInvitation() {
     if (entered) return;
-    entered = true;
 
+    // Play first — must stay inside the click/tap handler (iOS + Android)
     if (startMusicWithSound) startMusicWithSound();
 
+    entered = true;
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
 
@@ -80,14 +80,10 @@ function initSiteGate() {
     if (musicBtn) musicBtn.classList.add('is-visible');
   }
 
-  overlay.addEventListener('pointerdown', enterInvitation, { once: true, passive: true });
-
-  if (enterBtn) {
-    enterBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      enterInvitation();
-    });
-  }
+  overlay.addEventListener('pointerup', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    enterInvitation();
+  }, { once: true });
 
   const blockScroll = (e) => {
     if (!entered) e.preventDefault();
@@ -296,11 +292,9 @@ function initMusicPlayer() {
 
   let isPlaying = false;
   let musicAvailable = false;
-  let soundEnabled = false;
-  let musicReadyHandled = false;
-  let pendingSound = false;
+  let wantsToPlay = false;
+  let blobUrl = null;
 
-  // Disabled until audio file is confirmed available
   musicBtn.classList.add('unavailable');
   musicBtn.setAttribute('aria-label', 'جاري تحميل الموسيقى');
 
@@ -332,93 +326,80 @@ function initMusicPlayer() {
     setPlayingState(false);
   }
 
-  audio.addEventListener('error', disableMusic);
-
-  async function playAudio() {
-    try {
-      await audio.play();
-      setPlayingState(true);
-      return true;
-    } catch (err) {
-      if (err.name === 'NotSupportedError' || audio.error) disableMusic();
-      return false;
-    }
-  }
-
-  async function tryMutedAutoplay() {
-    if (!musicAvailable || isPlaying) return;
-    audio.muted = true;
-    await playAudio();
-  }
-
-  async function enableSoundAndPlay() {
-    if (!musicAvailable) {
-      pendingSound = true;
-      return false;
-    }
-
-    pendingSound = false;
-    soundEnabled = true;
+  function tryPlayNow() {
     audio.muted = false;
+    audio.volume = 1;
 
-    if (isPlaying) return true;
-    return playAudio();
+    const playAttempt = audio.play();
+    if (!playAttempt) {
+      setPlayingState(!audio.paused);
+      return playAttempt;
+    }
+
+    playAttempt
+      .then(() => {
+        wantsToPlay = false;
+        setPlayingState(true);
+      })
+      .catch(() => {
+        wantsToPlay = true;
+        setPlayingState(false);
+      });
+
+    return playAttempt;
   }
 
-  startMusicWithSound = enableSoundAndPlay;
-
-  function bindSoundOnFirstGesture() {
-    const activate = () => {
-      if (!soundEnabled) enableSoundAndPlay();
-    };
-    document.addEventListener('pointerdown', activate, { once: true, passive: true });
-  }
-
-  function onMusicReady() {
-    if (musicReadyHandled) return;
-    musicReadyHandled = true;
+  function playFromUserGesture() {
+    wantsToPlay = true;
     enableMusic();
-    tryMutedAutoplay();
-    bindSoundOnFirstGesture();
-
-    // Desktop browsers may allow unmuted autoplay
-    audio.muted = false;
-    playAudio().then((played) => {
-      if (played) soundEnabled = true;
-    });
-
-    if (pendingSound) enableSoundAndPlay();
+    tryPlayNow();
   }
 
+  function retryWhenReady() {
+    if (!wantsToPlay || isPlaying) return;
+    tryPlayNow();
+  }
+
+  startMusicWithSound = playFromUserGesture;
+
+  audio.addEventListener('error', disableMusic);
   audio.addEventListener('loadedmetadata', enableMusic);
-  audio.addEventListener('canplay', onMusicReady);
+  audio.addEventListener('canplay', retryWhenReady);
+  audio.addEventListener('canplaythrough', retryWhenReady);
 
-  const availabilityTimeout = setTimeout(() => {
-    if (!musicAvailable) disableMusic();
-  }, 15000);
-
-  audio.addEventListener('canplay', () => clearTimeout(availabilityTimeout), { once: true });
-  audio.addEventListener('error', () => clearTimeout(availabilityTimeout));
-
-  musicBtn.addEventListener('click', async () => {
-    if (!musicAvailable) return;
-
+  musicBtn.addEventListener('click', () => {
     if (isPlaying) {
+      wantsToPlay = false;
       audio.pause();
       setPlayingState(false);
     } else {
-      await enableSoundAndPlay();
+      playFromUserGesture();
     }
   });
 
-  // Use HTML <source> if present; otherwise set path from CONFIG
-  const sourceEl = audio.querySelector('source');
-  if (sourceEl && !sourceEl.getAttribute('src')) {
-    sourceEl.src = CONFIG.musicPath;
-    audio.load();
-  } else if (!sourceEl && !audio.getAttribute('src')) {
-    audio.src = CONFIG.musicPath;
-    audio.load();
+  prefetchMusicBlob();
+
+  async function prefetchMusicBlob() {
+    try {
+      const blob = window.__musicPrefetch
+        ? await window.__musicPrefetch
+        : await (await fetch(CONFIG.musicPath)).blob();
+
+      blobUrl = URL.createObjectURL(blob);
+      audio.src = blobUrl;
+      audio.load();
+      enableMusic();
+      retryWhenReady();
+    } catch (err) {
+      const sourceEl = audio.querySelector('source');
+      if (sourceEl && sourceEl.src) {
+        audio.src = sourceEl.src;
+      } else {
+        audio.src = CONFIG.musicPath;
+      }
+      audio.load();
+      enableMusic();
+    }
   }
 }
 

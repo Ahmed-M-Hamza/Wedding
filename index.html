@@ -13,9 +13,15 @@
 </head>
 <body>
 
-  <audio id="bg-music" autoplay loop preload="auto" playsinline>
+  <audio id="bg-music" loop preload="auto" playsinline webkit-playsinline>
     <source src="assets/music.mp3" type="audio/mpeg">
   </audio>
+  <script>
+    window.__musicPrefetch = fetch('assets/music.mp3').then(function (r) {
+      if (!r.ok) throw new Error('music fetch failed');
+      return r.blob();
+    });
+  </script>
 
   <!-- ═══════════════════════════════════════════════════════════
        OPENING ANIMATION OVERLAY
