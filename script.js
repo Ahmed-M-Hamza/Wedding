@@ -27,9 +27,6 @@ const CONFIG = {
   coupleImagePath: 'assets/couple.jpg',
   venueImagePath: 'assets/venue.jpg',
 
-  // Opening animation duration (milliseconds)
-  openingDuration: 2600,
-
   // RSVP API — must run via server (npm start)
   // EDIT: Change if API is hosted elsewhere
   rsvpApiUrl: '/api/rsvp',
@@ -38,47 +35,66 @@ const CONFIG = {
 /* ═══════════════════════════════════════════════════════════════
    DOM READY
    ═══════════════════════════════════════════════════════════════ */
+let startMusicWithSound = null;
+
 document.addEventListener('DOMContentLoaded', () => {
-  initOpeningAnimation();
+  initMusicPlayer();
+  initSiteGate();
   initHeroScrollPerf();
   initCountdown();
   initScrollReveal();
   initVenueLinks();
   initCoupleImage();
   initVenueImage();
-  initMusicPlayer();
   initRsvp();
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   OPENING ANIMATION
+   SITE GATE — Opening screen fixed until "اضغط للدخول"
    ═══════════════════════════════════════════════════════════════ */
-function initOpeningAnimation() {
+function initSiteGate() {
+  const html = document.documentElement;
   const overlay = document.getElementById('opening-overlay');
+  const enterBtn = document.getElementById('opening-enter-btn');
   const heroContent = document.querySelector('.hero-content');
+  const musicBtn = document.getElementById('music-btn');
   if (!overlay) return;
 
-  setTimeout(() => {
+  html.classList.add('site-locked');
+
+  let entered = false;
+
+  function enterInvitation() {
+    if (entered) return;
+    entered = true;
+
+    if (startMusicWithSound) startMusicWithSound();
+
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
 
-    // Staggered hero entrance after overlay fades
-    setTimeout(() => {
-      if (heroContent) heroContent.classList.add('hero-visible');
-    }, 150);
-  }, CONFIG.openingDuration);
+    html.classList.remove('site-locked');
+    html.classList.add('site-unlocked');
 
-  // Allow scroll during opening — dismiss overlay on first scroll/touch
-  let dismissed = false;
-  function dismissOpening() {
-    if (dismissed) return;
-    dismissed = true;
-    overlay.classList.add('hidden');
-    overlay.setAttribute('aria-hidden', 'true');
     if (heroContent) heroContent.classList.add('hero-visible');
+    if (musicBtn) musicBtn.classList.add('is-visible');
   }
-  window.addEventListener('scroll', dismissOpening, { passive: true, once: true });
-  window.addEventListener('touchmove', dismissOpening, { passive: true, once: true });
+
+  overlay.addEventListener('pointerdown', enterInvitation, { once: true, passive: true });
+
+  if (enterBtn) {
+    enterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      enterInvitation();
+    });
+  }
+
+  const blockScroll = (e) => {
+    if (!entered) e.preventDefault();
+  };
+
+  window.addEventListener('wheel', blockScroll, { passive: false });
+  window.addEventListener('touchmove', blockScroll, { passive: false });
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -280,6 +296,9 @@ function initMusicPlayer() {
 
   let isPlaying = false;
   let musicAvailable = false;
+  let soundEnabled = false;
+  let musicReadyHandled = false;
+  let pendingSound = false;
 
   // Disabled until audio file is confirmed available
   musicBtn.classList.add('unavailable');
@@ -314,32 +333,81 @@ function initMusicPlayer() {
   }
 
   audio.addEventListener('error', disableMusic);
-  audio.addEventListener('canplaythrough', enableMusic, { once: true });
 
-  // If file never loads (404), disable button after timeout
+  async function playAudio() {
+    try {
+      await audio.play();
+      setPlayingState(true);
+      return true;
+    } catch (err) {
+      if (err.name === 'NotSupportedError' || audio.error) disableMusic();
+      return false;
+    }
+  }
+
+  async function tryMutedAutoplay() {
+    if (!musicAvailable || isPlaying) return;
+    audio.muted = true;
+    await playAudio();
+  }
+
+  async function enableSoundAndPlay() {
+    if (!musicAvailable) {
+      pendingSound = true;
+      return false;
+    }
+
+    pendingSound = false;
+    soundEnabled = true;
+    audio.muted = false;
+
+    if (isPlaying) return true;
+    return playAudio();
+  }
+
+  startMusicWithSound = enableSoundAndPlay;
+
+  function bindSoundOnFirstGesture() {
+    const activate = () => {
+      if (!soundEnabled) enableSoundAndPlay();
+    };
+    document.addEventListener('pointerdown', activate, { once: true, passive: true });
+  }
+
+  function onMusicReady() {
+    if (musicReadyHandled) return;
+    musicReadyHandled = true;
+    enableMusic();
+    tryMutedAutoplay();
+    bindSoundOnFirstGesture();
+
+    // Desktop browsers may allow unmuted autoplay
+    audio.muted = false;
+    playAudio().then((played) => {
+      if (played) soundEnabled = true;
+    });
+
+    if (pendingSound) enableSoundAndPlay();
+  }
+
+  audio.addEventListener('loadedmetadata', enableMusic);
+  audio.addEventListener('canplay', onMusicReady);
+
   const availabilityTimeout = setTimeout(() => {
     if (!musicAvailable) disableMusic();
-  }, 4000);
+  }, 15000);
 
-  audio.addEventListener('canplaythrough', () => clearTimeout(availabilityTimeout), { once: true });
+  audio.addEventListener('canplay', () => clearTimeout(availabilityTimeout), { once: true });
   audio.addEventListener('error', () => clearTimeout(availabilityTimeout));
 
   musicBtn.addEventListener('click', async () => {
     if (!musicAvailable) return;
 
-    try {
-      if (isPlaying) {
-        audio.pause();
-        setPlayingState(false);
-      } else {
-        await audio.play();
-        setPlayingState(true);
-      }
-    } catch (err) {
-      // Only disable if the audio file is missing or unsupported
-      if (err.name === 'NotSupportedError' || audio.error) {
-        disableMusic();
-      }
+    if (isPlaying) {
+      audio.pause();
+      setPlayingState(false);
+    } else {
+      await enableSoundAndPlay();
     }
   });
 
@@ -347,11 +415,11 @@ function initMusicPlayer() {
   const sourceEl = audio.querySelector('source');
   if (sourceEl && !sourceEl.getAttribute('src')) {
     sourceEl.src = CONFIG.musicPath;
+    audio.load();
   } else if (!sourceEl && !audio.getAttribute('src')) {
     audio.src = CONFIG.musicPath;
+    audio.load();
   }
-
-  audio.load();
 }
 
 /* ═══════════════════════════════════════════════════════════════

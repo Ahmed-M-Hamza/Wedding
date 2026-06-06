@@ -9,8 +9,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=El+Messiri:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="preload" href="assets/music.mp3" as="audio" type="audio/mpeg">
 </head>
 <body>
+
+  <audio id="bg-music" autoplay loop preload="auto" playsinline>
+    <source src="assets/music.mp3" type="audio/mpeg">
+  </audio>
 
   <!-- ═══════════════════════════════════════════════════════════
        OPENING ANIMATION OVERLAY
@@ -37,6 +42,7 @@
       <div class="opening-line"></div>
       <p class="opening-date">٣٠ يونيو ٢٠٢٦</p>
       <div class="opening-ornament opening-ornament--bottom" aria-hidden="true"></div>
+      <button type="button" id="opening-enter-btn" class="opening-tap-hint">اضغط للدخول</button>
     </div>
   </div>
 
@@ -52,10 +58,6 @@
     </span>
     <span class="music-pulse" aria-hidden="true"></span>
   </button>
-  <audio id="bg-music" loop preload="none">
-    <source src="assets/music.mp3" type="audio/mpeg">
-  </audio>
-
   <!-- ═══════════════════════════════════════════════════════════
        DECORATIVE FLORAL ELEMENTS (CSS ONLY)
        ═══════════════════════════════════════════════════════════ -->
