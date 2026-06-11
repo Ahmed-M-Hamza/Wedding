@@ -24,7 +24,7 @@ const CONFIG = {
 
   // Asset paths
   musicPath: 'assets/music.mp3',
-  coupleImagePath: 'assets/couple.jpg',
+  coupleImagePath: 'assets/couple.png',
   venueImagePath: 'assets/venue.jpg',
 
   // RSVP API — must run via server (npm start)
@@ -222,35 +222,20 @@ function initVenueLinks() {
    COUPLE IMAGE — Graceful fallback if missing
    ═══════════════════════════════════════════════════════════════ */
 function initCoupleImage() {
-  const wrap = document.getElementById('couple-image-wrap');
-  const img = document.getElementById('couple-image');
+  const section = document.getElementById('photo-moment');
+  const img = document.getElementById('couple-photo');
 
-  if (!wrap || !img) return;
+  if (!section || !img) return;
 
   function hideImage() {
-    wrap.hidden = true;
+    section.hidden = true;
     img.removeAttribute('src');
   }
 
-  function showImage() {
-    if (img.naturalWidth > 0) {
-      wrap.hidden = false;
-    }
-  }
-
   img.addEventListener('error', hideImage);
-  img.addEventListener('load', showImage);
 
-  // Re-trigger load check (handles cached, missing, or already-failed states)
-  if (img.complete) {
-    if (img.naturalWidth > 0) {
-      showImage();
-    } else {
-      hideImage();
-    }
-  } else {
-    const currentSrc = img.getAttribute('src') || CONFIG.coupleImagePath;
-    img.src = currentSrc;
+  if (img.complete && img.naturalWidth === 0) {
+    hideImage();
   }
 }
 

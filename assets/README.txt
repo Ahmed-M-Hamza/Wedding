@@ -8,11 +8,9 @@ Place your media files in this folder:
    - Background wedding music (MP3 format recommended)
    - The site works fine without it — the music button will be disabled
 
-2. couple.jpg
-   - Optional couple photo (JPG or PNG)
-   - Recommended: square image, at least 600×600 px
-   - Used as a subtle background element in the hero section
-   - The site works fine without it — the image area stays hidden
+2. couple.png
+   - Couple / memory photo (PNG or JPG)
+   - Displayed in the photo-moment section
 
 3. venue.jpg
    - Venue photo (from Google Maps or your own)
@@ -38,6 +36,17 @@ To enable the RSVP counter (one confirmation per IP):
 
 Then open: http://localhost:3000
 
-RSVP data is stored in data/rsvps.json (IPs are hashed).
+RSVP data (local dev): data/rsvps.json (IPs are hashed).
+
+On Render, the local file is wiped on every deploy — use Upstash Redis (free):
+
+  1. Create account at https://upstash.com
+  2. Create a Redis database (free tier)
+  3. In Render → Environment, add:
+       UPSTASH_REDIS_REST_URL
+       UPSTASH_REDIS_REST_TOKEN
+  4. Redeploy — the counter will persist across updates
+
+Optional: set RSVP_SALT to a random secret before going live.
 
 ═══════════════════════════════════════════════════════════════
