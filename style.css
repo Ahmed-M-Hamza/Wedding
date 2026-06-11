@@ -171,14 +171,11 @@ button {
 /* ═══════════════════════════════════════════════════════════════
    SITE GATE — Lock scroll until opening screen dismissed
    ═══════════════════════════════════════════════════════════════ */
-html.site-locked {
-  overflow: hidden;
-  height: 100%;
-}
-
 html.site-locked body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
   overflow: hidden;
-  height: 100%;
 }
 
 html.site-locked main {

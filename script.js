@@ -63,13 +63,7 @@ function initSiteGate() {
 
   let entered = false;
 
-  function enterInvitation() {
-    if (entered) return;
-
-    // Play first — must stay inside the click/tap handler (iOS + Android)
-    if (startMusicWithSound) startMusicWithSound();
-
-    entered = true;
+  function unlockSite() {
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
 
@@ -78,10 +72,28 @@ function initSiteGate() {
 
     if (heroContent) heroContent.classList.add('hero-visible');
     if (musicBtn) musicBtn.classList.add('is-visible');
+
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    window.scrollTo(0, 0);
+    requestAnimationFrame(() => window.scrollTo(0, 0));
   }
 
-  overlay.addEventListener('pointerup', (e) => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+  function enterInvitation() {
+    if (entered) return;
+    entered = true;
+
+    // Play first — must stay inside the tap handler (iOS + Android)
+    if (startMusicWithSound) startMusicWithSound();
+
+    // Brief delay so the same tap doesn't click through to #countdown below
+    setTimeout(unlockSite, 80);
+  }
+
+  overlay.addEventListener('click', (e) => {
+    e.preventDefault();
     enterInvitation();
   }, { once: true });
 
