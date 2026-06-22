@@ -1211,8 +1211,253 @@ html.site-unlocked .floral-corner {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   EVENT DETAILS
+   EVENTS — Henna & wedding schedule
    ═══════════════════════════════════════════════════════════════ */
+.events {
+  background: linear-gradient(180deg, var(--color-off-white), var(--color-cream));
+}
+
+.events-timeline {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  max-width: 420px;
+  margin: 0 auto clamp(1.75rem, 4vw, 2.25rem);
+}
+
+@media (min-width: 768px) {
+  .events-timeline {
+    display: flex;
+  }
+}
+
+.events-timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  box-shadow: 0 0 0 4px rgba(201, 169, 98, 0.2);
+  flex-shrink: 0;
+}
+
+.events-timeline-dot--wedding {
+  background: var(--color-gold-bright);
+  box-shadow: 0 0 0 4px rgba(232, 217, 168, 0.25);
+}
+
+.events-timeline-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-bright));
+  opacity: 0.55;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.25rem, 3.5vw, 1.75rem);
+  max-width: 820px;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .events-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+}
+
+.event-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  text-align: center;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 48px rgba(20, 18, 16, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.event-card--henna {
+  border-top: 3px solid rgba(201, 169, 98, 0.55);
+}
+
+.event-card--wedding {
+  border-top: 3px solid var(--color-gold-bright);
+}
+
+.event-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(1.1rem, 3vw, 1.35rem) clamp(1.15rem, 3vw, 1.5rem) 0.75rem;
+}
+
+.event-badge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+}
+
+.event-badge--henna {
+  color: var(--color-gold-deep);
+  background: rgba(201, 169, 98, 0.14);
+  border: 1px solid rgba(201, 169, 98, 0.35);
+}
+
+.event-badge--wedding {
+  color: var(--color-ivory);
+  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold));
+  border: 1px solid rgba(201, 169, 98, 0.4);
+}
+
+.event-icon {
+  font-size: 1.1rem;
+  color: var(--color-gold);
+  opacity: 0.75;
+}
+
+.event-card-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.event-card-image-wrap[hidden] {
+  display: none;
+}
+
+.event-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 8s var(--ease-soft);
+}
+
+.event-card--henna:hover .event-card-image,
+.event-card--wedding:hover .event-card-image {
+  transform: scale(1.04);
+}
+
+.event-card-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(250, 247, 242, 0.35) 100%);
+  pointer-events: none;
+}
+
+.event-card-body {
+  padding: clamp(1rem, 3vw, 1.35rem) clamp(1.15rem, 3vw, 1.5rem);
+  flex: 1;
+}
+
+.event-day {
+  font-size: clamp(0.82rem, 2.2vw, 0.92rem);
+  color: var(--color-gold-dark);
+  letter-spacing: 0.14em;
+  margin-bottom: 0.35rem;
+}
+
+.event-date {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 600;
+  color: var(--color-black);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.35rem;
+}
+
+.event-time {
+  font-size: clamp(0.9rem, 2.4vw, 1rem);
+  color: var(--color-black-soft);
+  margin-bottom: 0.25rem;
+}
+
+.event-divider {
+  width: min(64px, 18vw);
+  height: 1px;
+  margin: 1rem auto;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+}
+
+.event-meta {
+  margin-bottom: 0.65rem;
+}
+
+.event-meta-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--color-gold-dark);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.3rem;
+}
+
+.event-venue {
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  font-weight: 600;
+  color: var(--color-black);
+  line-height: 1.5;
+}
+
+.event-dress {
+  font-size: clamp(0.85rem, 2.2vw, 0.92rem);
+  color: var(--color-black-soft);
+  line-height: 1.7;
+  margin-top: 0.5rem;
+}
+
+.event-dress .event-meta-label {
+  margin-bottom: 0.2rem;
+}
+
+.event-map-btn {
+  width: calc(100% - clamp(2rem, 5vw, 3rem));
+  margin: 0 auto clamp(1.15rem, 3vw, 1.35rem);
+  font-size: clamp(0.82rem, 2.2vw, 0.9rem);
+  padding: 0.75rem 1rem;
+}
+
+.btn--outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: transparent;
+  color: var(--color-gold-dark);
+  border: 1.5px solid rgba(201, 169, 98, 0.55);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition:
+    color 0.35s var(--ease-luxury),
+    border-color 0.35s var(--ease-luxury),
+    background 0.35s var(--ease-luxury);
+}
+
+.btn--outline:hover {
+  color: var(--color-gold-deep);
+  border-color: var(--color-gold);
+  background: rgba(201, 169, 98, 0.08);
+}
+
+/* Legacy detail cards — kept for reference */
 .details {
   background: linear-gradient(180deg, var(--color-off-white), var(--color-cream));
 }

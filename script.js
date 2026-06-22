@@ -16,7 +16,12 @@ const CONFIG = {
   // Format: Year, Month (0-indexed), Day, Hour, Minute
   weddingDate: new Date(2026, 5, 30, 20, 0, 0), // 30 June 2026, 8:00 PM
 
-  // Venue details (also editable in index.html)
+  // Henna event — EDIT: date, venue & maps link
+  hennaDate: new Date(2026, 5, 28), // 28 June 2026 (Sunday)
+  hennaVenueName: 'قاعة سكاي فيو',
+  hennaMapsUrl: 'https://maps.app.goo.gl/eMThZYNnVC4Nxsbs8',
+
+  // Wedding venue (also editable in index.html)
   venueName: 'قاعة أوسيل',
 
   // Google Maps link — replace with your venue's Google Maps URL
@@ -26,6 +31,7 @@ const CONFIG = {
   musicPath: 'assets/music.mp3',
   coupleImagePath: 'assets/couple.png',
   venueImagePath: 'assets/venue.jpg',
+  hennaVenueImagePath: 'assets/henna-venue.jpg',
 
   // RSVP API — must run via server (npm start)
   // EDIT: Change if API is hosted elsewhere
@@ -43,9 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initHeroScrollPerf();
   initCountdown();
   initScrollReveal();
-  initVenueLinks();
+  initEvents();
   initCoupleImage();
-  initVenueImage();
+  initEventImages();
   initRsvp();
 });
 
@@ -217,16 +223,23 @@ function initScrollReveal() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   VENUE LINKS — Google Maps & WhatsApp
+   EVENTS — Henna & wedding schedule
    ═══════════════════════════════════════════════════════════════ */
-function initVenueLinks() {
-  const mapsBtn = document.getElementById('maps-btn');
-  const venueNameEl = document.getElementById('venue-name');
+function initEvents() {
+  const hennaVenueEl = document.getElementById('henna-venue-name');
+  const weddingVenueEl = document.getElementById('wedding-venue-name');
+  const hennaMapsBtn = document.getElementById('henna-maps-btn');
+  const weddingMapsBtn = document.getElementById('wedding-maps-btn');
 
-  if (venueNameEl) venueNameEl.textContent = CONFIG.venueName;
+  if (hennaVenueEl) hennaVenueEl.textContent = CONFIG.hennaVenueName;
+  if (weddingVenueEl) weddingVenueEl.textContent = CONFIG.venueName;
 
-  if (mapsBtn && CONFIG.mapsUrl) {
-    mapsBtn.href = CONFIG.mapsUrl;
+  if (hennaMapsBtn && CONFIG.hennaMapsUrl) {
+    hennaMapsBtn.href = CONFIG.hennaMapsUrl;
+  }
+
+  if (weddingMapsBtn && CONFIG.mapsUrl) {
+    weddingMapsBtn.href = CONFIG.mapsUrl;
   }
 }
 
@@ -252,11 +265,11 @@ function initCoupleImage() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   VENUE IMAGE — Graceful fallback if missing
+   EVENT IMAGES — Graceful fallback if missing
    ═══════════════════════════════════════════════════════════════ */
-function initVenueImage() {
-  const wrap = document.getElementById('venue-image-wrap');
-  const img = document.getElementById('venue-image');
+function initEventImage(wrapId, imgId, fallbackPath) {
+  const wrap = document.getElementById(wrapId);
+  const img = document.getElementById(imgId);
 
   if (!wrap || !img) return;
 
@@ -273,7 +286,14 @@ function initVenueImage() {
   if (img.complete) {
     if (img.naturalWidth > 0) wrap.hidden = false;
     else hideImage();
+  } else if (fallbackPath && !img.getAttribute('src')) {
+    img.src = fallbackPath;
   }
+}
+
+function initEventImages() {
+  initEventImage('henna-venue-image-wrap', 'henna-venue-image', CONFIG.hennaVenueImagePath);
+  initEventImage('wedding-venue-image-wrap', 'venue-image', CONFIG.venueImagePath);
 }
 
 /* ═══════════════════════════════════════════════════════════════
